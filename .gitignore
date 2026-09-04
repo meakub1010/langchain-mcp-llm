@@ -1,0 +1,35 @@
+# --- Python / uv ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.python-version-local
+
+# uv.lock IS committed on purpose — do not ignore it.
+# It pins exact resolved dependency versions for reproducible installs.
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Testing / linting caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# --- PyCharm ---
+.idea/
+
+# --- macOS ---
+.DS_Store
+
+# --- Logs / local scratch ---
+*.log
+.langchain.db          # LangChain's default local SQLite cache, if enabled
+
+# --- Ingested source files staged for RAG testing (keep the repo small) ---
+data/raw/
+data/processed/
