@@ -59,3 +59,18 @@ langchain-mcp-adapters is an official LangChain library (Python, with a JS/TS ve
 * Seamlessly integrates the hundreds of tool servers already published into LangGraph Agents 
 
 
+### Add langgraph
+```bash
+uv add langgraph
+```
+
+
+### add sentence transformer for embedding, there is alternative using openai, need api key
+```bash
+uv add sentence-transformers
+```
+
+### add dependency for chunking the text for better embedding
+```bash
+uv add langchain-text-splitters pypdf
+```

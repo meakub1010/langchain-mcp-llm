@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
 DATABASE_URL_READONLY = os.getenv("DATABASE_URL_READONLY")
 
 def get_connection():
@@ -46,3 +47,26 @@ def run_readonly_query(sql:str) -> list[dict]:
 
     with get_connection() as conn:
         return conn.execute(sql).fetchall()
+
+def upsert_chunk(source_id: str, source_url: str | None, content: str, content_hash: str, embedding: list[float]) -> None:
+    """insert chunk or does nothing is the exact (source_id, content_hash) already exist
+    this is for incremental re-indexing
+    """
+    query = """
+        INSERT INTO document_chunks(source_id, source_url, content, content_hash, embedding)
+        VALUES (%(source_id)s, %(source_url)s, %(content)s, %(content_hash)s, %(embedding)s)
+        ON CONFLICT (source_id, content_hash) DO NOTHING
+        RETURNING id;
+    """
+
+    with psycopg.connect(DATABASE_URL, row_factory=dict_row) as conn:
+        result = conn.execute(query, {
+            "source_id": source_id,
+            "source_url": source_url,
+            "content": content,
+            "content_hash": content_hash,
+            "embedding": embedding,
+        }).fetchone()
+        conn.commit()
+
+    return result is not None
