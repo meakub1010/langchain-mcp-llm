@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from app.model_factory import get_chat_model
+from mcp_server.db import insert_review
 
 class ExtractedReview(BaseModel):
     product_name: str | None = Field(None, description="Product mentioned, if any")
@@ -14,12 +15,15 @@ def extract_review(text: str):
         f"Extract structured review information from this customer feedback: \n\n{text}"
     )
 
-# Test this without DB yet
-# from mcp_server.tools.extract_to_db import extract_review
-#
-# result = extract_review("""
-# Subject: Order #1042 - not happy
-# The wireless mouse I got is fine but shipping took way too long,
-# almost two weeks. Would give it 2 out of 5 stars overall.
-# """)
-# print(result)
+def extract_to_db(source_file: str, text: str) -> dict:
+    try:
+        review = extract_review(text)
+    except Exception as e:
+        return {"source_file": source_file, "inserted": False, "error": f"extraction failed: {e}"}
+
+    try:
+        review_id = insert_review(source_file, text, review)
+    except Exception as e:
+        return {"source_file": source_file, "inserted": False, "error": f"extraction failed: {e}"}
+
+    return {"source_file": source_file, "inserted": True, "review_id": review_id}

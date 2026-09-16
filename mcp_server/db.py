@@ -83,3 +83,26 @@ def search_chunks(embedding: list[float], limit: int = 5) -> list[dict]:
     """
     with get_connection() as conn:
         return conn.execute(query, {"embedding": embedding, "limit": limit}).fetchall()
+
+# implement insert review
+def insert_review(source_file: str, raw_text: str, review) -> int:
+    query = """
+        INSERT into product_reviews 
+            (source_file, order_id, product_name, rating, mentions_shipping_issue, summary, raw_text)
+        VALUES 
+            (%(source_file)s, %(order_id)s, %(product_name)s, %(rating)s, 
+            %(mentions_shipping_issue)s, %(summary)s, %(raw_text)s)
+        RETURNING id;
+    """
+    with psycopg.connect(DATABASE_URL, row_factory=dict_row) as conn:
+        result = conn.execute(query, {
+            "source_file": source_file,
+            "order_id": review.order_id,
+            "product_name": review.product_name,
+            "rating": review.rating,
+            "mentions_shipping_issue": review.mentions_shipping_issue,
+            "summary": review.summary,
+            "raw_text": raw_text,
+        }).fetchone()
+        conn.commit()
+        return result["id"]
