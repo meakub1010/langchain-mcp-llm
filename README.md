@@ -74,3 +74,8 @@ uv add sentence-transformers
 ```bash
 uv add langchain-text-splitters pypdf
 ```
+
+### test
+```bash
+  uv add --dev pytest
+```

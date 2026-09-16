@@ -3,9 +3,11 @@
 import asyncio
 import sys
 
+from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
 
+from app.memory import trim_history, summarize_if_needed
 from app.model_factory import get_chat_model
 
 MCP_SERVERS = {
@@ -28,6 +30,7 @@ async def build_agent():
 
 async def chat():
     agent = await build_agent()
+    messages = []
     print("Connected. Ask a question (type 'exit' to quit). \n")
     while True:
         try:
@@ -38,8 +41,10 @@ async def chat():
             break
         if not question:
             continue
-        result = await agent.ainvoke({"messages": [("user", question)]})
-        print(result["messages"][-1].content)
+        messages.append(HumanMessage(content=question))
+        result = await agent.ainvoke({"messages": messages})
+        messages = summarize_if_needed(result["messages"], get_chat_model())
+        print(result["messages"][-1].content, "\n")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

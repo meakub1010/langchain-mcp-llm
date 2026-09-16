@@ -70,3 +70,16 @@ def upsert_chunk(source_id: str, source_url: str | None, content: str, content_h
         conn.commit()
 
     return result is not None
+
+def search_chunks(embedding: list[float], limit: int = 5) -> list[dict]:
+    """Finds the chunks most semantically similar to the given embedding,
+    using the pgvector's cosine distance operator (<=>)"""
+    query = """
+    SELECT source_id, source_url, content, 1 - (embedding <=> %(embedding)s::vector) AS similarity
+    FROM document_chunks
+    WHERE embedding IS NOT NULL
+    ORDER BY embedding <=> %(embedding)s::vector
+    LIMIT %(limit)s
+    """
+    with get_connection() as conn:
+        return conn.execute(query, {"embedding": embedding, "limit": limit}).fetchall()

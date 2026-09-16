@@ -68,3 +68,17 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO langchain_mcp_llm_reader;
 
 -- ensures any table created later is also read-only for this role automatically
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO langchain_mcp_llm_reader;
+
+
+-- create product reviews table
+create table if not exists product_reviews (
+    id serial primary key,
+    source_file text not null,
+    order_id int references orders(id),
+    product_name text,
+    rating int check (rating between 1 and 5),
+    mentions_shipping_issue boolean not null default false,
+    summary text,
+    raw_text text not null,
+    created_at timestamptz not null default now()
+);
