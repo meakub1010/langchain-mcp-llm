@@ -79,3 +79,14 @@ uv add langchain-text-splitters pypdf
 ```bash
   uv add --dev pytest
 ```
+
+
+### introduce Google Calendar API
+```bash
+  uv add google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+Run the google-api setup scripts to authorize 
+Check if token exist using below command
+```bash
+    ls -la token.pickle
+```

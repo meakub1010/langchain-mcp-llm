@@ -13,6 +13,9 @@ __pycache__/
 .env.*
 !.env.example
 
+credentials.json
+token.pickle
+
 # --- Testing / linting caches ---
 .pytest_cache/
 .mypy_cache/

@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from datetime import date
 
 from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -30,7 +31,13 @@ async def build_agent():
 
 async def chat():
     agent = await build_agent()
-    messages = []
+    messages = [
+        (
+            "system", f"Today's date is {date.today().isoformat()}."
+            f"Use this to resolve any relative or partial dates the user mentions"
+            f"(e.g. 'next Tuesday', 'Sep 29' with no year) into full, correct dates."
+        )
+    ]
     print("Connected. Ask a question (type 'exit' to quit). \n")
     while True:
         try:
