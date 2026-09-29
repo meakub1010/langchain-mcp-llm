@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+
 from mcp_server.calendar_client import get_calendar_service
 
 
@@ -38,3 +39,33 @@ def reschedule_appointment():
     pass
 def cancel_appointment():
     pass
+
+def find_events(query: str, days_ahead: int = 60) -> dict:
+    try:
+        calendar = get_calendar_service()
+        now_dt = datetime.utcnow()
+        later_dt = now_dt + timedelta(days=days_ahead)
+        now = now_dt.isoformat() + "Z"
+        later = later_dt.isoformat() + "Z"
+
+        result = calendar.events().list(
+            calendarId="primary",
+            q=query,
+            timeMin=now,
+            timeMax=later,
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute()
+    except Exception as e:
+        return {"Found": False, "error": str(e)}
+
+    events = [
+        {
+            "event_id": e["id"],
+            "summary": e["summary"],
+            "start_time": e.get("start", {}).get("dateTime"),
+        }
+        for e in result.get("items", [])
+    ]
+
+    return {"found": len(events) > 0, "events": events}

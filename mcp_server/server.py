@@ -5,6 +5,7 @@ from mcp_server.tools.extract_to_db import extract_to_db as _extract_to_db
 
 
 from mcp_server.tools.manage_appointment import create_appointment as _create_appointment
+from mcp_server.tools.manage_appointment import find_events as _find_events
 
 mcp = FastMCP("langchain-mcp-llm")
 
@@ -30,6 +31,15 @@ def create_appointment(event_name: str, start_time: str, duration_minuites: int 
         start_time must be an ISO 8601 datetime string (e.g. '2026-10-01T14:00:00').
         duration_minutes defaults to 30 if not specified."""
     return _create_appointment(event_name, start_time, duration_minuites)
+
+@mcp.tool()
+def find_events(query: str, days_ahead: int = 60) -> dict:
+    """Search calendar events. Two ways to use this:
+        Keyword search for an upcoming event by title (e.g. to find an event_id before cancelling/rescheduling):
+       provide `query` (e.g. "HR Meeting"). Searches from now through `days_ahead` days ahead (default 60).
+       Returns a list of matching events with event_id, summary, and start_time.
+    """
+    return _find_events(query, days_ahead)
 
 
 if __name__ == "__main__":

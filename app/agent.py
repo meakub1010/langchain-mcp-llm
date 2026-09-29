@@ -33,8 +33,9 @@ async def chat():
     agent = await build_agent()
     messages = [
         (
-            "system", f"Today's date is {date.today().isoformat()}."
-            f"Use this to resolve any relative or partial dates the user mentions"
+            "system",
+            f"Today's date is {date.today().isoformat()}. "
+            f"Use this to resolve any relative or partial dates the user mentions "
             f"(e.g. 'next Tuesday', 'Sep 29' with no year) into full, correct dates."
         )
     ]
