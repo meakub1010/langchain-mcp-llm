@@ -35,12 +35,38 @@ def create_appointment(event_name: str, start_time: str, duration_minutes: int =
         "event_link": result.get("htmlLink"),
         "start_time": start.isoformat(),
     }
-def reschedule_appointment():
-    pass
-def cancel_appointment():
-    pass
+def reschedule_appointment(event_id: int, new_start_time: str, duration_minutes: int = 30):
+    try:
+        start = datetime.fromisoformat(new_start_time)
+        end = start + timedelta(minutes=duration_minutes)
+    except ValueError as e:
+        return {"re-scheduled": False, "error": str(e)}
 
-def find_events(query: str, days_ahead: int = 60) -> dict:
+    try:
+        calendar = get_calendar_service()
+        result = calendar.events().patch(
+            calendarId="primary",
+            eventId=event_id,
+            body={
+                "start": {"dateTime": start.isoformat(), "timeZone": "America/New_York"},
+                "end": {"dateTime": end.isoformat(), "timeZone": "America/New_York"},
+            },
+            sendUpdates="all",
+        ).execute()
+    except Exception as e:
+        return {"re-scheduled": False, "error": str(e)}
+
+    return {"re-scheduled": True, "event_id": result["id"], "new_start_time": start.isoformat(), "event_link": result["htmlLink"]}
+def cancel_appointment(event_id:str):
+    try:
+        calendar = get_calendar_service()
+        calendar.events().delete(calendarId="primary", eventId=event_id, sendUpdates="all").execute()
+    except Exception as e:
+        return {"cancelled": False, "error": str(e)}
+
+    return {"cancelled": True, "event_id": event_id}
+
+def find_appointments(query: str, days_ahead: int = 60) -> dict:
     try:
         calendar = get_calendar_service()
         now_dt = datetime.utcnow()
