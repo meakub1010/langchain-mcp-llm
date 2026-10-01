@@ -57,6 +57,50 @@ def reschedule_appointment(event_id: int, new_start_time: str, duration_minutes:
         return {"re-scheduled": False, "error": str(e)}
 
     return {"re-scheduled": True, "event_id": result["id"], "new_start_time": start.isoformat(), "event_link": result["htmlLink"]}
+
+
+def create_recurring_event(
+        event_name: str,
+        start_time: str,
+        duration_minutes: int = 30,
+        frequency: str = "WEEKLY",
+        by_day: list[str] | None = None,
+        until: str|None = None,
+        count: str|None = None,
+) -> dict:
+    try:
+        start = datetime.fromisoformat(start_time)
+        end = start + timedelta(minutes=duration_minutes)
+    except ValueError as e:
+        return {"created": False, "error": str(e)}
+    rule_parts = [f"FREQ={frequency}"]
+    if by_day:
+        rule_parts.append(f"BYDAY={','.join(by_day)}")
+    if until:
+        until_dt = datetime.fromisoformat(until)
+        rule_parts.append(f"UNTIL={until_dt.strftime('%Y%m%dT%H%M%SZ')}")
+    elif count:
+        rule_parts.append(f"COUNT={count}")
+    else:
+        return {"created": False, "error": "must provide either 'until' or 'count' to bound the recurrence"}
+    rrule = "RRULE:" + ";".join(rule_parts)
+
+    event = {
+        "summary": event_name,
+        "start": {"dateTime": start.isoformat(), "timeZone": "America/New_York"},
+        "end": {"dateTime": end.isoformat(), "timeZone": "America/New_York"},
+        "recurrence": [rrule],
+    }
+    print(event)
+    try:
+        calendar = get_calendar_service()
+        result = calendar.events().insert(calendarId="primary", body=event, sendUpdates="all").execute()
+    except Exception as e:
+        return {"created": False, "error": str(e)}
+
+    return {"created": True, "event_id": result["id"], "recurrence_rule": rrule, "event_link": result["htmlLink"]}
+
+
 def cancel_appointment(event_id:str):
     try:
         calendar = get_calendar_service()

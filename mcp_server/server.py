@@ -8,7 +8,7 @@ from mcp_server.tools.manage_appointment import create_appointment as _create_ap
 from mcp_server.tools.manage_appointment import find_appointments as _find_appointments
 from mcp_server.tools.manage_appointment import cancel_appointment as _cancel_appointment
 from mcp_server.tools.manage_appointment import reschedule_appointment as _reschedule_appointment
-
+from mcp_server.tools.manage_appointment import create_recurring_event as _create_recurring_event
 
 mcp = FastMCP("langchain-mcp-llm")
 
@@ -35,6 +35,41 @@ def create_appointment(event_name: str, start_time: str, duration_minuites: int 
         duration_minutes defaults to 30 if not specified.
         IMPORTANT: if the request is ambiguous or contradictory, ask before creating multiple events."""
     return _create_appointment(event_name, start_time, duration_minuites)
+
+@mcp.tool()
+def create_recurring_event(
+        event_name: str,
+        start_time: str,
+        duration_minutes: int = 30,
+        frequency: str = "WEEKLY",
+        by_day: list[str] | None = None,
+        until: str | None = None,
+        count: str | None = None,
+) -> dict:
+    """Create a single recurring calendar event (e.g. "every weekday", "every Friday until December").
+       ALWAYS use this instead of calling create_appointment multiple times for a repeating schedule —
+       this creates one true recurring series that Google Calendar manages natively, rather than many
+       separate individual events, and can be cancelled/rescheduled with one call instead of many.
+
+       Parameters:
+       - start_time: ISO 8601 datetime of the FIRST occurrence (e.g. '2026-10-02T12:30:00').
+       - frequency: 'DAILY', 'WEEKLY', or 'MONTHLY'.
+       - by_day: list of two-letter weekday codes for which days it repeats on, e.g. ['FR'] for every Friday,
+         or ['MO','TU','WE','TH','FR'] for every weekday. Omit for daily/monthly recurrence with no specific day.
+       - until: ISO date (e.g. '2026-12-31') — the recurrence ends on or before this date. Use this for
+         requests like "until the end of the year" or "through December".
+       - count: number of occurrences instead of an end date — use this for requests like "for the next 10 weeks".
+       You must provide exactly one of `until` or `count`, never both, and never neither — every recurring
+       event must have a defined end."""
+
+    return _create_recurring_event(
+        event_name,
+        start_time,
+        duration_minutes,
+        frequency,
+        by_day,
+        until,
+        count)
 
 @mcp.tool()
 def find_events(query: str, days_ahead: int = 60) -> dict:
